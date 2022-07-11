@@ -1,8 +1,12 @@
 import {
   FastifyInstance,
-  FastifyRequest,
   FastifySchema,
   HTTPMethods,
+  RawReplyDefaultExpression,
+  RawRequestDefaultExpression,
+  RawServerDefault,
+  RequestGenericInterface,
+  RouteHandlerMethod,
 } from "fastify";
 import fastifySwagger, { FastifyDynamicSwaggerOptions } from "@fastify/swagger";
 import * as yaml from "js-yaml";
@@ -26,26 +30,32 @@ export type RegisterOptions<S extends Models> = {
     };
   };
 };
-type RouteHandlerParams<
+interface RouteHandlerParams<
   M extends Models,
   Params extends void | SchemaKey<M>,
   Body extends void | SchemaKey<M>,
-  Querystring extends void | SchemaKey<M>,
-> = FastifyRequest<{
+  Reply extends void | SchemaKey<M>,
+  Querystring extends void | SchemaKey<M>
+> extends RequestGenericInterface {
   Params: SchemaTypeOption<M, Params>;
   Body: SchemaTypeOption<M, Body>;
+  Reply: SchemaTypeOption<M, Reply>;
   Querystring: SchemaTypeOption<M, Querystring>;
-}>;
+}
+
 
 type RouteHandler<
   M extends Models,
   Params extends void | SchemaKey<M>,
   Body extends void | SchemaKey<M>,
   Reply extends void | SchemaKey<M>,
-  Querystring extends void | SchemaKey<M>,
-> = (
-  params: RouteHandlerParams<M, Params, Body, Querystring>,
-) => Promise<SchemaTypeOption<M, Reply>>;
+  Querystring extends void | SchemaKey<M>
+> = RouteHandlerMethod<
+  RawServerDefault,
+  RawRequestDefaultExpression<RawServerDefault>,
+  RawReplyDefaultExpression<RawServerDefault>,
+  RouteHandlerParams<M, Params, Body, Reply, Querystring>
+>;
 
 type RouteConfig<
   M extends Models = Models,
@@ -53,7 +63,7 @@ type RouteConfig<
   Params extends void | SchemaKey<M> = void,
   Body extends void | SchemaKey<M> = void,
   Reply extends void | SchemaKey<M> = void,
-  Querystring extends void | SchemaKey<M> = void,
+  Querystring extends void | SchemaKey<M> = void
 > = {
   readonly url: string;
   readonly method: Method;
@@ -91,14 +101,14 @@ export type FastifyZod<M extends Models> = {
     Params extends void | SchemaKey<M> = void,
     Body extends void | SchemaKey<M> = void,
     Reply extends void | SchemaKey<M> = void,
-    Querystring extends void | SchemaKey<M> = void,
+    Querystring extends void | SchemaKey<M> = void
   >(
     url: string,
     config: Omit<
       RouteConfig<M, Method, Params, Body, Reply, Querystring>,
       `url` | `method` | `schema` | `handler`
     >,
-    handler: RouteHandler<M, Params, Body, Reply, Querystring>,
+    handler: RouteHandler<M, Params, Body, Reply, Querystring>
   ) => void;
 };
 
@@ -107,7 +117,7 @@ export type FastifyZodInstance<M extends Models> = FastifyInstance & {
 };
 
 export const withRefResolver = (
-  options: FastifyDynamicSwaggerOptions,
+  options: FastifyDynamicSwaggerOptions
 ): FastifyDynamicSwaggerOptions => ({
   ...options,
   refResolver: {
@@ -120,7 +130,7 @@ export const withRefResolver = (
 
 export const register = <S extends Models>(
   f: FastifyInstance,
-  { jsonSchemas: { schemas, $ref }, swaggerOptions }: RegisterOptions<S>,
+  { jsonSchemas: { schemas, $ref }, swaggerOptions }: RegisterOptions<S>
 ): FastifyZodInstance<S> => {
   for (const schema of schemas) {
     f.addSchema(schema);
@@ -200,7 +210,7 @@ export const register = <S extends Models>(
     Params extends void | SchemaKey<S> = void,
     Body extends void | SchemaKey<S> = void,
     Reply extends void | SchemaKey<S> = void,
-    Querystring extends void | SchemaKey<S> = void,
+    Querystring extends void | SchemaKey<S> = void
   >({
     method,
     url,
@@ -237,7 +247,7 @@ export const register = <S extends Models>(
           ...fastifySchema,
         },
       },
-      handler,
+      handler
     );
   };
 
