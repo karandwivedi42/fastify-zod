@@ -57,7 +57,7 @@
     "fastify": "^4.0.0"
   },
   "dependencies": {
-    "@fastify/swagger": "^6.1.0",
+    "@fastify/swagger": "^7.0.0",
     "@openapitools/openapi-generator-cli": "^2.5.1",
     "@types/js-yaml": "^4.0.5",
     "change-case": "^4.1.2",
